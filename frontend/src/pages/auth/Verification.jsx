@@ -1,17 +1,32 @@
-import PagePlaceholder from '../../components/PagePlaceholder.jsx'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 export default function Verification() {
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  function handleVerify() {
+    // Still a mock OTP step (no real email delivery exists) — just carries
+    // the real name/email collected on the previous screen forward.
+    navigate('/onboarding/profile', { state: location.state })
+  }
+
   return (
-    <PagePlaceholder
-      area="Auth & Onboarding"
-      title="Verify your college ID"
-      description="OTP / email-link confirmation goes here. New users only — existing users never see this screen."
-      bullets={[
-        '6-digit code input',
-        'Resend code link',
-        'Fallback: manual ID upload for review',
-      ]}
-      actions={[{ to: '/onboarding/profile', label: 'Verify → Profile & Skills Setup' }]}
-    />
+    <div className="page">
+      <div className="page-eyebrow">Auth & Onboarding</div>
+      <h1>Verify your college ID</h1>
+      <p className="page-desc">
+        OTP / email-link confirmation goes here. New users only — existing users never see this screen.
+      </p>
+      <ul className="page-bullets">
+        <li>6-digit code input</li>
+        <li>Resend code link</li>
+        <li>Fallback: manual ID upload for review</li>
+      </ul>
+      <div className="page-actions">
+        <button type="button" className="btn" onClick={handleVerify}>
+          Verify → Profile & Skills Setup
+        </button>
+      </div>
+    </div>
   )
 }

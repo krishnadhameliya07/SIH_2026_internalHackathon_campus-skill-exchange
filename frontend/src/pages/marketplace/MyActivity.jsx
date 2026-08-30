@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { getRequests, getServices, CURRENT_USER_ID } from '../../api.js'
+import { getRequests, getServices, getCurrentUserId } from '../../api.js'
 
 export default function MyActivity() {
   const [items, setItems] = useState([])
@@ -16,7 +16,7 @@ export default function MyActivity() {
 
         const mine = [
           ...requests
-            .filter((r) => r.user_id === CURRENT_USER_ID)
+            .filter((r) => r.user_id === getCurrentUserId())
             .map((r) => ({
               id: `req-${r.id}`,
               title: r.description,
@@ -25,7 +25,7 @@ export default function MyActivity() {
               createdAt: r.created_at,
             })),
           ...services
-            .filter((s) => s.user_id === CURRENT_USER_ID)
+            .filter((s) => s.user_id === getCurrentUserId())
             .map((s) => ({
               id: `svc-${s.id}`,
               title: s.title,

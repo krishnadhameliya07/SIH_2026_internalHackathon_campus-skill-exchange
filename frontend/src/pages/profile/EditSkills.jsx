@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getSkills, getUserSkills, addUserSkill, analyzeProfile, CURRENT_USER_ID } from '../../api.js'
+import { getSkills, getUserSkills, addUserSkill, analyzeProfile, getCurrentUserId } from '../../api.js'
 
 const EVIDENCE_TYPES = [
   { value: 'github', label: 'GitHub repo', icon: '🔗' },
@@ -43,7 +43,7 @@ export default function EditSkills() {
   const [analyzeResult, setAnalyzeResult] = useState(null)
 
   async function loadSkills() {
-    const [skills, userSkills] = await Promise.all([getSkills(), getUserSkills(CURRENT_USER_ID)])
+    const [skills, userSkills] = await Promise.all([getSkills(), getUserSkills(getCurrentUserId())])
     const skillById = Object.fromEntries(skills.map((s) => [s.id, s.name]))
     const mine = userSkills.map((us) => ({
       skillId: us.skill_id,

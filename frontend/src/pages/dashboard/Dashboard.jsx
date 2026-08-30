@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { getUser, getCurrentUserId } from '../../api.js'
 
 const STATS = [
   { value: '120', label: 'Credits' },
@@ -52,11 +53,20 @@ const NOTIFICATIONS_PREVIEW = [
 
 export default function Dashboard() {
   const [showSkillNudge, setShowSkillNudge] = useState(true)
+  const [name, setName] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+    getUser(getCurrentUserId())
+      .then((user) => { if (!cancelled) setName(user.name) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
 
   return (
     <div className="page">
       <div className="page-eyebrow">Home / Dashboard</div>
-      <h1>Welcome back, Bhavani</h1>
+      <h1>Welcome back{name ? `, ${name}` : ''}</h1>
 
       <div className="profile-stats dash-stats">
         {STATS.map((s) => (

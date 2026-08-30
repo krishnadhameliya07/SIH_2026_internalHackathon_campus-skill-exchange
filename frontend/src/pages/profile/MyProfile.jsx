@@ -4,7 +4,7 @@ import ProfileHeader from '../../components/ProfileHeader.jsx'
 import SkillGraph from '../../components/SkillGraph.jsx'
 import InferredCapability from '../../components/InferredCapability.jsx'
 import ReviewList from '../../components/ReviewList.jsx'
-import { getSkillGraph, CURRENT_USER_ID } from '../../api.js'
+import { getSkillGraph, getUser, getCurrentUserId } from '../../api.js'
 
 const REVIEWS = [
   { rating: 5, author: 'Priya S.', text: 'Great to work with, delivered early.' },
@@ -22,15 +22,34 @@ function toTreeData(categories) {
   }))
 }
 
+function ordinal(n) {
+  const v = n % 100
+  if (v >= 11 && v <= 13) return `${n}th`
+  return `${n}${{ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th'}`
+}
+
+function subtitleFrom(user) {
+  return [user?.department, user?.year ? `${ordinal(user.year)} year` : null, user?.availability ? `Available ${user.availability}` : null]
+    .filter(Boolean)
+    .join(' · ')
+}
+
 export default function MyProfile() {
   const [graph, setGraph] = useState(null)
+  const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
     let cancelled = false
-    getSkillGraph(CURRENT_USER_ID)
-      .then((data) => { if (!cancelled) setGraph(data) })
+    const userId = getCurrentUserId()
+    Promise.all([getSkillGraph(userId), getUser(userId)])
+      .then(([graphData, userData]) => {
+        if (!cancelled) {
+          setGraph(graphData)
+          setUser(userData)
+        }
+      })
       .catch((err) => { if (!cancelled) setError(err.message) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
@@ -41,9 +60,9 @@ export default function MyProfile() {
       <div className="page-eyebrow">Skill Profile — live from the real backend + database</div>
 
       <ProfileHeader
-        name="Bhavani"
-        subtitle="Computer Science · 3rd year · Available weekends"
-        bio={graph?.summary || 'Add a resume, GitHub, or description in Edit Skills to generate an AI summary.'}
+        name={user?.name || '...'}
+        subtitle={subtitleFrom(user) || 'Add your department, year, and availability in Settings.'}
+        bio={user?.bio || graph?.summary || 'Add a resume, GitHub, or description in Edit Skills to generate an AI summary.'}
         stats={[
           { value: '120', label: 'Credits' },
           { value: '4.6★', label: 'Avg rating' },

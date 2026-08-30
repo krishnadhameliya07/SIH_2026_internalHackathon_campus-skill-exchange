@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { login } from '../../auth.js'
+import { lookupUserByEmail } from '../../api.js'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -10,17 +11,16 @@ export default function SignUpLogin() {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
   const [agreed, setAgreed] = useState(false)
   const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   function switchMode(next) {
     setMode(next)
     setError('')
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
 
     if (mode === 'signup' && !firstName.trim()) {
@@ -31,21 +31,31 @@ export default function SignUpLogin() {
       setError('Enter a valid college email.')
       return
     }
-    if (!password) {
-      setError(mode === 'login' ? 'Enter your password.' : 'Choose a password.')
-      return
-    }
     if (mode === 'signup' && !agreed) {
       setError('You need to agree to the Terms & Privacy Policy to continue.')
       return
     }
 
     setError('')
-    if (mode === 'login') {
-      login()
+
+    if (mode === 'signup') {
+      // Carry the real typed name/email forward through the rest of onboarding —
+      // the account itself gets created at the end, once we also have their
+      // profile details, so it's a single real signup, not a half-built one.
+      navigate('/verify', { state: { name: `${firstName.trim()} ${lastName.trim()}`.trim(), email: email.trim() } })
+      return
+    }
+
+    // Login: no password check by design — just find the account by email.
+    setSubmitting(true)
+    try {
+      const user = await lookupUserByEmail(email.trim())
+      login(user)
       navigate('/')
-    } else {
-      navigate('/verify')
+    } catch {
+      setError('No account found with that email. Try signing up instead.')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -99,26 +109,6 @@ export default function SignUpLogin() {
           />
         </label>
 
-        <label>
-          Password
-          <div className="password-field">
-            <input
-              type={showPassword ? 'text' : 'password'}
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <button
-              type="button"
-              className="password-toggle"
-              onClick={() => setShowPassword((v) => !v)}
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
-            >
-              {showPassword ? '🙈' : '👁️'}
-            </button>
-          </div>
-        </label>
-
         {mode === 'signup' && (
           <label className="checkbox-row checkbox-row-terms">
             <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
@@ -128,8 +118,8 @@ export default function SignUpLogin() {
 
         {error && <p className="form-error form-error-centered">{error}</p>}
 
-        <button type="submit" className="btn btn-block">
-          {mode === 'login' ? 'Log in' : 'Join skillX'}
+        <button type="submit" className="btn btn-block" disabled={submitting}>
+          {submitting ? 'Logging in…' : mode === 'login' ? 'Log in' : 'Join skillX'}
         </button>
       </form>
 

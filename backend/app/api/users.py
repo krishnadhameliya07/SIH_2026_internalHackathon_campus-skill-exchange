@@ -60,6 +60,31 @@ def create_user(
 
 
 # =========================================================
+# LOOKUP USER BY EMAIL (no password — just "does this account exist")
+# =========================================================
+
+@router.get(
+    "/lookup/{email}",
+    response_model=UserResponse,
+)
+def lookup_user_by_email(
+    email: str,
+    db: Session = Depends(get_db),
+):
+    user = db.scalar(
+        select(User).where(User.email == email)
+    )
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No account found with that email.",
+        )
+
+    return user
+
+
+# =========================================================
 # GET USER
 # =========================================================
 

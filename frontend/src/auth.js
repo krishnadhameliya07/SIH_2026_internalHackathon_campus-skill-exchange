@@ -1,18 +1,18 @@
+import { setCurrentUserId, clearCurrentUserId } from './api.js'
+
 const KEY = 'csx_auth'
 
-/**
- * Stand-in for real auth until the backend exists. Same shape a real
- * token-based check would have (isAuthenticated/login/logout), so swapping
- * localStorage for a real session/token later doesn't change any callers.
- */
 export function isAuthenticated() {
   return localStorage.getItem(KEY) === 'true'
 }
 
-export function login() {
+/** Call with the real user object returned by signup/login — makes their real id the active one. */
+export function login(user) {
   localStorage.setItem(KEY, 'true')
+  if (user?.id) setCurrentUserId(user.id)
 }
 
 export function logout() {
   localStorage.removeItem(KEY)
+  clearCurrentUserId()
 }

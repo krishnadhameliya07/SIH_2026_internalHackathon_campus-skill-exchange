@@ -1,8 +1,21 @@
 const API_BASE = 'http://localhost:8000'
+const USER_ID_KEY = 'csx_user_id'
 
-// Stand-in for a real logged-in user until real auth exists on the backend —
-// this is Bhavani's seeded row in the actual database.
-export const CURRENT_USER_ID = 4
+// Whoever actually signed up/logged in on this browser — falls back to the
+// original seeded demo account (Bhavani, id 4) if nobody's signed up yet,
+// so existing flows still work out of the box.
+export function getCurrentUserId() {
+  const stored = localStorage.getItem(USER_ID_KEY)
+  return stored ? Number(stored) : 4
+}
+
+export function setCurrentUserId(id) {
+  localStorage.setItem(USER_ID_KEY, String(id))
+}
+
+export function clearCurrentUserId() {
+  localStorage.removeItem(USER_ID_KEY)
+}
 
 async function request(path, options) {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -24,7 +37,7 @@ export function createRequest({ description, skillId, deadline }) {
   return request('/requests', {
     method: 'POST',
     body: JSON.stringify({
-      user_id: CURRENT_USER_ID,
+      user_id: getCurrentUserId(),
       description,
       skill_required: skillId,
       deadline,
@@ -44,7 +57,7 @@ export function createService({ title, description, skillId, availability, credi
   return request('/services', {
     method: 'POST',
     body: JSON.stringify({
-      user_id: CURRENT_USER_ID,
+      user_id: getCurrentUserId(),
       title,
       description,
       skill_id: skillId,
@@ -59,7 +72,7 @@ export function getUserSkills(userId) {
 }
 
 export function addUserSkill({ skillId, proficiency }) {
-  return request(`/users/${CURRENT_USER_ID}/skills`, {
+  return request(`/users/${getCurrentUserId()}/skills`, {
     method: 'POST',
     body: JSON.stringify({
       skill_id: skillId,
@@ -81,7 +94,7 @@ export async function analyzeProfile({ resumeFile, resumeText, githubUsername, b
   if (githubUsername) form.append('github_username', githubUsername)
   if (bio) form.append('bio', bio)
 
-  const res = await fetch(`${API_BASE}/users/${CURRENT_USER_ID}/analyze-profile`, {
+  const res = await fetch(`${API_BASE}/users/${getCurrentUserId()}/analyze-profile`, {
     method: 'POST',
     body: form,
   })
@@ -98,6 +111,19 @@ export function getMatchesForRequest(requestId) {
 
 export function getUser(userId) {
   return request(`/users/${userId}`)
+}
+
+/** Real signup — creates a real row in the database with whatever name/details were typed in. */
+export function createUser({ name, email, department, year, bio, availability }) {
+  return request('/users', {
+    method: 'POST',
+    body: JSON.stringify({ name, email, department, year, bio, availability }),
+  })
+}
+
+/** No password check by design — this just finds an existing account by email. */
+export function lookupUserByEmail(email) {
+  return request(`/users/lookup/${encodeURIComponent(email)}`)
 }
 
 /** Qualitative tier from the real match score — same "no fake precision" rule as the mock version. */
