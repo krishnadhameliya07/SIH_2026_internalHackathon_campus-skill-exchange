@@ -6,12 +6,20 @@ from app.db.database import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserResponse
 
+from app.services.student_recommendations import (
+    get_student_recommendation_results,
+)
+
 
 router = APIRouter(
     prefix="/users",
     tags=["Users"],
 )
 
+
+# =========================================================
+# CREATE USER
+# =========================================================
 
 @router.post(
     "",
@@ -23,7 +31,9 @@ def create_user(
     db: Session = Depends(get_db),
 ):
     existing_user = db.scalar(
-        select(User).where(User.email == user_data.email)
+        select(User).where(
+            User.email == user_data.email
+        )
     )
 
     if existing_user:
@@ -49,6 +59,10 @@ def create_user(
     return user
 
 
+# =========================================================
+# GET USER
+# =========================================================
+
 @router.get(
     "/{user_id}",
     response_model=UserResponse,
@@ -57,7 +71,10 @@ def get_user(
     user_id: int,
     db: Session = Depends(get_db),
 ):
-    user = db.get(User, user_id)
+    user = db.get(
+        User,
+        user_id,
+    )
 
     if not user:
         raise HTTPException(
@@ -66,3 +83,41 @@ def get_user(
         )
 
     return user
+
+
+# =========================================================
+# AI STUDENT RECOMMENDATIONS
+# =========================================================
+
+@router.get(
+    "/{user_id}/recommendations",
+)
+def get_user_recommendations(
+    user_id: int,
+    limit: int = 5,
+    db: Session = Depends(get_db),
+):
+    """
+    Return AI-powered recommendations for other students
+    using their real PostgreSQL skills, interests, and bios.
+    """
+
+    if limit < 1:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="limit must be greater than 0.",
+        )
+
+    result = get_student_recommendation_results(
+        user_id=user_id,
+        db=db,
+        top_k=limit,
+    )
+
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found.",
+        )
+
+    return result
