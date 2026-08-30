@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.requests import router as requests_router
 from app.api.services import router as services_router
@@ -11,6 +12,7 @@ from app.db.init_db import init_db
 from app.api.matches import router as matches_router
 from app.api.ai_matches import router as ai_matches_router
 from app.api.skill_analysis import router as skill_analysis_router
+from app.api.profile_analysis import router as profile_analysis_router
 
 
 @asynccontextmanager
@@ -29,6 +31,14 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Local-dev-only: allow the Vite frontend (different port) to call this API.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:5174"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # Register API routers
 app.include_router(users_router)
@@ -39,6 +49,7 @@ app.include_router(requests_router)
 app.include_router(matches_router)
 app.include_router(ai_matches_router)
 app.include_router(skill_analysis_router)
+app.include_router(profile_analysis_router)
 
 @app.get("/")
 def root():

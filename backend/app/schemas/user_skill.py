@@ -15,3 +15,4 @@ class UserSkillResponse(BaseModel):
     skill_id: int
     proficiency: str
     verification_status: str
+    evidence_note: str | None = None

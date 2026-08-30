@@ -1,10 +1,10 @@
 function ConfidenceDisplay({ node }) {
   if (!node.confidence) return null
 
-  if (node.confidence === 'evidence-backed' && node.evidence) {
+  if (node.confidence === 'evidence-backed') {
     return (
       <span className="evidence-chip">
-        <span aria-hidden="true">{node.evidence.icon || '📎'}</span> {node.evidence.label}
+        <span aria-hidden="true">{node.evidence?.icon || '📎'}</span> {node.evidence?.label || 'evidence-backed'}
       </span>
     )
   }
@@ -14,9 +14,8 @@ function ConfidenceDisplay({ node }) {
     return <span className="peer-chip">✓ Confirmed by {count} peer{count > 1 ? 's' : ''}</span>
   }
 
-  // self-declared, or evidence-backed with no evidence attached yet — the
-  // point of this component is to show proof, not just assert a label, so
-  // the fallback stays deliberately understated rather than a colored badge.
+  // self-declared — the point of this component is to show proof, not just
+  // assert a label, so this fallback stays deliberately understated.
   return <span className="confidence-note">self-declared</span>
 }
 

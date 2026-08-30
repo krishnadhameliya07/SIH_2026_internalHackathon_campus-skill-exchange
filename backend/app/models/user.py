@@ -53,6 +53,31 @@ class User(Base):
         default=list,
     )
 
+    github_username: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+    )
+
+    resume_text: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
+    ai_summary: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
+    ai_inferred_capability: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
+    ai_inferred_basis: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),

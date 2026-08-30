@@ -1,56 +1,50 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-
-const CANDIDATES = [
-  {
-    id: 'kabir',
-    name: 'Kabir M.',
-    tier: 'Strong Match',
-    tags: ['Video Editing', 'Premiere Pro'],
-    availability: 'Available this week',
-    proof: 'Evidence-backed (3 completed projects)',
-    reason: 'Matched on video editing skill + availability before Saturday.',
-  },
-  {
-    id: 'sana',
-    name: 'Sana T.',
-    tier: 'Good Match',
-    tags: ['Video Editing'],
-    availability: 'Available weekends',
-    proof: 'Self-declared',
-    reason: 'Matched on video editing skill; availability is a partial fit.',
-  },
-  {
-    id: 'divya',
-    name: 'Divya P.',
-    tier: 'Possible Match',
-    tags: ['Photography', 'Basic editing'],
-    availability: 'Available this week',
-    proof: 'Peer-backed (2 reviews)',
-    reason: 'Adjacent skill set — editing experience is limited but availability fits well.',
-  },
-]
+import { getMatchesForRequest, getUser, scoreTier } from '../../api.js'
 
 export default function MatchResults() {
   const { requestId } = useParams()
-  // Simulates the real fetch-and-wait that will replace this once matching
-  // is a backend call — same "loading -> ready" shape, so swapping in a real
-  // request later doesn't change how this screen renders.
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [candidates, setCandidates] = useState([])
 
   useEffect(() => {
+    let cancelled = false
     setLoading(true)
-    const timer = setTimeout(() => setLoading(false), 700)
-    return () => clearTimeout(timer)
+    setError('')
+
+    async function load() {
+      try {
+        const matches = await getMatchesForRequest(requestId)
+        const withNames = await Promise.all(
+          matches.map(async (m) => {
+            const user = await getUser(m.candidate_id)
+            return {
+              id: m.candidate_id,
+              name: user.name,
+              tier: scoreTier(m.match_score),
+              reason: m.reason,
+            }
+          })
+        )
+        if (!cancelled) setCandidates(withNames)
+      } catch (err) {
+        if (!cancelled) setError(err.message)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    load()
+    return () => { cancelled = true }
   }, [requestId])
 
   return (
     <div className="page">
-      <div className="page-eyebrow">Marketplace</div>
+      <div className="page-eyebrow">Marketplace — live from the real backend + database</div>
       <div className="match-context">
         <div>
           <h1>Matches for request #{requestId}</h1>
-          <p className="page-desc">"Need someone to edit a 5-minute promotional video by Saturday"</p>
         </div>
         <Link to="/marketplace/post-request" className="link-small">Edit request →</Link>
       </div>
@@ -60,32 +54,33 @@ export default function MatchResults() {
           <span className="spinner" aria-hidden="true" />
           Finding your best matches…
         </div>
-      ) : (
-        <>
-          <ul className="candidate-list">
-            {CANDIDATES.map((c) => (
-              <li key={c.id} className="candidate-card">
-                <Link to={`/profile/${c.id}`} className="candidate-avatar">🧑</Link>
-                <div className="candidate-body">
-                  <div className="candidate-header">
-                    <Link to={`/profile/${c.id}`} className="candidate-name">{c.name}</Link>
-                    <span className={'tier-badge tier-' + c.tier.split(' ')[0].toLowerCase()}>{c.tier}</span>
-                  </div>
-                  <div className="listing-tags">
-                    {c.tags.map((t) => <span key={t} className="tag">{t}</span>)}
-                  </div>
-                  <div className="candidate-meta">{c.availability} · {c.proof}</div>
-                  <p className="candidate-reason">{c.reason}</p>
-                </div>
-                <Link to="/marketplace/conversation/102" className="btn btn-small">Send Request</Link>
-              </li>
-            ))}
-          </ul>
-
-          <p className="page-desc fallback-note">
-            No strong matches? <Link to="/marketplace/post-request" className="link-small">Broaden your request →</Link>
+      ) : error ? (
+        <p className="form-error">Couldn't load matches: {error}</p>
+      ) : candidates.length === 0 ? (
+        <div className="empty-state">
+          <p className="empty-state-title">No one with this skill yet</p>
+          <p className="page-desc">
+            The AI checked the database and genuinely found no students offering this skill right now —
+            this isn't an error, there's just no one to match with yet.
           </p>
-        </>
+          <Link to="/marketplace/post-request" className="btn btn-small btn-ghost">← Try a different skill</Link>
+        </div>
+      ) : (
+        <ul className="candidate-list">
+          {candidates.map((c) => (
+            <li key={c.id} className="candidate-card">
+              <Link to={`/profile/${c.id}`} className="candidate-avatar">🧑</Link>
+              <div className="candidate-body">
+                <div className="candidate-header">
+                  <Link to={`/profile/${c.id}`} className="candidate-name">{c.name}</Link>
+                  <span className={'tier-badge tier-' + c.tier.split(' ')[0].toLowerCase()}>{c.tier}</span>
+                </div>
+                <p className="candidate-reason">{c.reason}</p>
+              </div>
+              <Link to="/marketplace/conversation/102" className="btn btn-small">Send Request</Link>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   )

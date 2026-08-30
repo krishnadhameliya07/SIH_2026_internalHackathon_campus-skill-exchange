@@ -1,38 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-
-const LISTINGS = [
-  {
-    id: 1,
-    type: 'Request',
-    posterId: 'priya',
-    poster: 'Priya S.',
-    title: 'Need a poster designed for our hackathon',
-    tags: ['Graphic Design', 'Poster'],
-    meta: 'Due Friday',
-    category: 'Design',
-  },
-  {
-    id: 2,
-    type: 'Offer',
-    posterId: 'alex',
-    poster: 'Alex R.',
-    title: 'I can teach Python to beginners on weekends',
-    tags: ['Python', 'Tutoring'],
-    meta: 'Weekends · 1 credit/hr',
-    category: 'Tutoring',
-  },
-  {
-    id: 3,
-    type: 'Request',
-    posterId: 'mira',
-    poster: 'Mira K.',
-    title: 'Need someone to edit a 5-minute promo video',
-    tags: ['Video Editing'],
-    meta: 'Due Saturday',
-    category: 'Video & Media',
-  },
-]
+import { getSkills, getRequests, getServices, getUser } from '../../api.js'
 
 const POPULAR_TAGS = ['Poster Design', 'Video Editing', 'Web Development', 'Logo Design', 'Python Tutoring']
 
@@ -45,12 +13,83 @@ const CATEGORIES = [
   { name: 'Other', icon: '🔧' },
 ]
 
+// Real skills don't carry one of our 6 display categories yet (the backend's
+// own `category` field is just "General" for now), so map by name until
+// real skill-taxonomy categories exist.
+const CATEGORY_BY_SKILL = {
+  'Video Editing': 'Video & Media',
+  Python: 'Programming',
+  'Graphic Design': 'Design',
+}
+
 export default function MarketplaceFeed() {
   const navigate = useNavigate()
   const [mode, setMode] = useState('need') // 'need' | 'can'
   const [text, setText] = useState('')
   const [error, setError] = useState('')
   const [selectedCategory, setSelectedCategory] = useState(null)
+
+  const [listings, setListings] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      try {
+        const [skills, requests, services] = await Promise.all([getSkills(), getRequests(), getServices()])
+        const skillById = Object.fromEntries(skills.map((s) => [s.id, s.name]))
+
+        const userIds = [...new Set([...requests.map((r) => r.user_id), ...services.map((s) => s.user_id)])]
+        const users = await Promise.all(userIds.map(getUser))
+        const userById = Object.fromEntries(users.map((u) => [u.id, u.name]))
+
+        const requestItems = requests.map((r) => {
+          const skillName = skillById[r.skill_required] || 'Other'
+          return {
+            id: `req-${r.id}`,
+            type: 'Request',
+            posterId: r.user_id,
+            poster: userById[r.user_id] || 'Unknown',
+            title: r.description,
+            tags: [skillName],
+            meta: r.deadline ? `Due ${r.deadline}` : '',
+            category: CATEGORY_BY_SKILL[skillName] || 'Other',
+            createdAt: r.created_at,
+          }
+        })
+
+        const serviceItems = services.map((s) => {
+          const skillName = skillById[s.skill_id] || 'Other'
+          return {
+            id: `svc-${s.id}`,
+            type: 'Offer',
+            posterId: s.user_id,
+            poster: userById[s.user_id] || 'Unknown',
+            title: s.title,
+            tags: [skillName],
+            meta: [s.availability, `${s.credits} credit${s.credits !== 1 ? 's' : ''}/hr`].filter(Boolean).join(' · '),
+            category: CATEGORY_BY_SKILL[skillName] || 'Other',
+            createdAt: s.created_at,
+          }
+        })
+
+        const merged = [...requestItems, ...serviceItems].sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        )
+
+        if (!cancelled) setListings(merged)
+      } catch (err) {
+        if (!cancelled) setLoadError(err.message)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    load()
+    return () => { cancelled = true }
+  }, [])
 
   function handleSubmit(e) {
     e.preventDefault()
@@ -74,12 +113,12 @@ export default function MarketplaceFeed() {
   }
 
   const filteredListings = selectedCategory
-    ? LISTINGS.filter((l) => l.category === selectedCategory)
-    : LISTINGS
+    ? listings.filter((l) => l.category === selectedCategory)
+    : listings
 
   return (
     <div className="page">
-      <div className="page-eyebrow">Marketplace</div>
+      <div className="page-eyebrow">Marketplace — live from the real backend + database</div>
       <h1>Marketplace</h1>
 
       <div className="tab-row">
@@ -156,7 +195,14 @@ export default function MarketplaceFeed() {
         </select>
       </div>
 
-      {filteredListings.length > 0 ? (
+      {loading ? (
+        <div className="loading-state">
+          <span className="spinner" aria-hidden="true" />
+          Loading the feed…
+        </div>
+      ) : loadError ? (
+        <p className="form-error">Couldn't load the feed: {loadError}</p>
+      ) : filteredListings.length > 0 ? (
         <ul className="listing-feed">
           {filteredListings.map((listing) => (
             <li key={listing.id} className="listing-card">
