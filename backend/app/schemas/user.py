@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class UserCreate(BaseModel):
@@ -10,6 +10,7 @@ class UserCreate(BaseModel):
     year: int | None = None
     bio: str | None = None
     availability: str | None = None
+    interests: list[str] = Field(default_factory=list)
 
 
 class UserResponse(BaseModel):
@@ -22,4 +23,5 @@ class UserResponse(BaseModel):
     year: int | None
     bio: str | None
     availability: str | None
+    interests: list[str]
     created_at: datetime

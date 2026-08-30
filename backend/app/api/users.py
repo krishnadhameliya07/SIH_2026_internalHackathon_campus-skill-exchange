@@ -39,6 +39,7 @@ def create_user(
         year=user_data.year,
         bio=user_data.bio,
         availability=user_data.availability,
+        interests=user_data.interests,
     )
 
     db.add(user)
