@@ -22,4 +22,8 @@ class UserResponse(BaseModel):
     year: int | None
     bio: str | None
     availability: str | None
+    github_username: str | None = None
+    ai_summary: str | None = None
+    ai_inferred_capability: str | None = None
+    ai_inferred_basis: str | None = None
     created_at: datetime

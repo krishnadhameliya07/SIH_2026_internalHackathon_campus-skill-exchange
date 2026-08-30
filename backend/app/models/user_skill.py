@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy import ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.database import Base
@@ -35,4 +35,9 @@ class UserSkill(Base):
         String(30),
         nullable=False,
         default="Self-declared",
+    )
+
+    evidence_note: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
     )
