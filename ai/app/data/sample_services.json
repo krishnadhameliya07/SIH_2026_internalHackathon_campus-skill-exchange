@@ -1,0 +1,99 @@
+[
+    {
+        "id": 1,
+        "service_id": 1,
+        "name": "Python Programming Workshop",
+        "title": "Python Programming Workshop",
+        "description": "Learn Python programming fundamentals, functions, data structures, and practical programming techniques.",
+        "skills": [
+            "Python",
+            "Programming",
+            "Data Structures"
+        ],
+        "category": "Programming",
+        "provider_id": 101,
+        "provider_name": "Computer Science Club"
+    },
+    {
+        "id": 2,
+        "service_id": 2,
+        "name": "Machine Learning Bootcamp",
+        "title": "Machine Learning Bootcamp",
+        "description": "Learn machine learning concepts, artificial intelligence, model training, and data analysis using Python.",
+        "skills": [
+            "Machine Learning",
+            "Artificial Intelligence",
+            "Python",
+            "Data Analysis"
+        ],
+        "category": "Artificial Intelligence",
+        "provider_id": 102,
+        "provider_name": "AI Student Association"
+    },
+    {
+        "id": 3,
+        "service_id": 3,
+        "name": "Data Analysis with Python",
+        "title": "Data Analysis with Python",
+        "description": "Learn data analysis using Python, pandas, NumPy, visualization, and practical datasets.",
+        "skills": [
+            "Python",
+            "Data Analysis",
+            "Pandas",
+            "NumPy"
+        ],
+        "category": "Data Science",
+        "provider_id": 103,
+        "provider_name": "Data Science Club"
+    },
+    {
+        "id": 4,
+        "service_id": 4,
+        "name": "React Web Development",
+        "title": "React Web Development",
+        "description": "Learn React, JavaScript, components, state management, and how to build modern web applications.",
+        "skills": [
+            "React",
+            "JavaScript",
+            "Web Development",
+            "HTML",
+            "CSS"
+        ],
+        "category": "Web Development",
+        "provider_id": 104,
+        "provider_name": "Web Development Club"
+    },
+    {
+        "id": 5,
+        "service_id": 5,
+        "name": "UI/UX Design Workshop",
+        "title": "UI/UX Design Workshop",
+        "description": "Learn user interface design, user experience principles, Figma, wireframes, and prototyping.",
+        "skills": [
+            "UI Design",
+            "UX Design",
+            "Figma",
+            "Graphic Design"
+        ],
+        "category": "Design",
+        "provider_id": 105,
+        "provider_name": "Design Club"
+    },
+    {
+        "id": 6,
+        "service_id": 6,
+        "name": "Backend Development with Django",
+        "title": "Backend Development with Django",
+        "description": "Learn Django, Python backend development, REST APIs, databases, and SQL.",
+        "skills": [
+            "Python",
+            "Django",
+            "Backend Development",
+            "SQL",
+            "REST API"
+        ],
+        "category": "Backend Development",
+        "provider_id": 106,
+        "provider_name": "Software Engineering Club"
+    }
+]
