@@ -45,6 +45,12 @@ Built incrementally, by whoever's endpoint existed at the time. As of this READM
 - Marketplace: browsing, posting a request/offer, My Activity, AI-scored matches (heuristic
   scoring in `backend/app/services/matching.py`, plus a second AI-ranking path in
   `ai-matches` backed by `ai/`)
+- Marketplace **smart requests**: Post a Request no longer asks which skill you need — you
+  describe a goal in plain language (e.g. "I want to create a YouTube video") and Gemini
+  decomposes it into the distinct skills actually required (video editing, thumbnail design,
+  title/description writing, ...), then runs real matching once per skill and shows results
+  grouped by skill, so a compound goal honestly shows coverage vs. gaps
+  (`backend/app/services/intent_extraction.py`, `backend/app/api/smart_requests.py`)
 - Skill Profile: Edit Skills (add/list real skills), and the full AI Skill Graph pipeline —
   upload a resume (PDF or pasted text) and/or a GitHub username and/or a bio, and Gemini
   builds a real categorized skill graph + summary + one inferred cross-skill capability,
@@ -63,11 +69,13 @@ every real API call the frontend makes currently lives.
 ```
 backend/app/
   api/        one router per resource (users, skills, services, requests,
-              matches, ai_matches, skill_analysis, profile_analysis)
+              matches, ai_matches, skill_analysis, profile_analysis,
+              smart_requests)
   models/     SQLAlchemy models
   schemas/    Pydantic request/response schemas
   services/   business logic (matching, ai_adapter, ai_matching,
-              skill_normalization, skill_extraction, student_recommendations)
+              skill_normalization, skill_extraction, intent_extraction,
+              student_recommendations)
   db/         engine/session setup + table init
 
 frontend/src/
