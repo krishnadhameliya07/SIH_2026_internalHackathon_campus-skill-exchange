@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { getRequests, getServices, getCurrentUserId } from '../../api.js'
+import { getRequests, getServices, getSkills, getCurrentUserId } from '../../api.js'
 
 export default function MyActivity() {
   const [items, setItems] = useState([])
@@ -12,7 +12,8 @@ export default function MyActivity() {
 
     async function load() {
       try {
-        const [requests, services] = await Promise.all([getRequests(), getServices()])
+        const [requests, services, skills] = await Promise.all([getRequests(), getServices(), getSkills()])
+        const skillNameById = new Map(skills.map((s) => [s.id, s.name]))
 
         const mine = [
           ...requests
@@ -20,6 +21,7 @@ export default function MyActivity() {
             .map((r) => ({
               id: `req-${r.id}`,
               title: r.description,
+              skillName: skillNameById.get(r.skill_required),
               status: r.status,
               to: `/marketplace/matches/${r.id}`,
               createdAt: r.created_at,
@@ -80,7 +82,11 @@ export default function MyActivity() {
           {items.map((item) => (
             <li key={item.id}>
               <Link to={item.to} className="feed-item">
-                {item.title} <span className="status-pill">{item.status}</span>
+                <span>
+                  {item.title}
+                  {item.skillName && <span className="feed-item-skill"> — {item.skillName}</span>}
+                </span>
+                <span className="status-pill">{item.status}</span>
               </Link>
             </li>
           ))}

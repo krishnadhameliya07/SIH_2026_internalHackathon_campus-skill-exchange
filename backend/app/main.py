@@ -13,6 +13,7 @@ from app.api.matches import router as matches_router
 from app.api.ai_matches import router as ai_matches_router
 from app.api.skill_analysis import router as skill_analysis_router
 from app.api.profile_analysis import router as profile_analysis_router
+from app.api.smart_requests import router as smart_requests_router
 
 
 @asynccontextmanager
@@ -50,6 +51,7 @@ app.include_router(matches_router)
 app.include_router(ai_matches_router)
 app.include_router(skill_analysis_router)
 app.include_router(profile_analysis_router)
+app.include_router(smart_requests_router)
 
 @app.get("/")
 def root():

@@ -752,6 +752,11 @@ a {
   width: 100%;
 }
 
+.feed-item-skill {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
 .feed-list-muted .feed-item,
 .feed-list-muted li {
   color: var(--text-muted);

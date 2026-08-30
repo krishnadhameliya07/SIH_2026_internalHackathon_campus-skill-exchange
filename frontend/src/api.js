@@ -45,6 +45,22 @@ export function createRequest({ description, skillId, deadline }) {
   })
 }
 
+/**
+ * The real "type your goal" flow — no skill dropdown. The AI figures out
+ * which distinct skills the goal needs (could be several) and returns
+ * real matches grouped by skill.
+ */
+export function createSmartRequest({ description, deadline }) {
+  return request('/requests/smart', {
+    method: 'POST',
+    body: JSON.stringify({
+      user_id: getCurrentUserId(),
+      description,
+      deadline,
+    }),
+  })
+}
+
 export function getRequests() {
   return request('/requests')
 }
