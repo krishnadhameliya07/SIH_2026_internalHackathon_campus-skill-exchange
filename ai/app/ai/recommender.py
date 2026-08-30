@@ -1208,3 +1208,109 @@ def get_service_recommendations(
         services=services,
         top_k=top_k
     )
+
+# =========================================================
+# REQUEST → SERVICE MATCHING
+# =========================================================
+
+def match_request_to_services(
+    request: Dict[str, Any],
+    services: List[Dict[str, Any]],
+    top_k: int = 5
+) -> List[Dict[str, Any]]:
+    """
+    Match a service request against available services.
+
+    This function is used by the backend matching service.
+
+    The request may contain:
+    - description
+    - skills
+    - skill_required
+
+    The existing hybrid service recommendation engine is
+    reused so that request matching and normal service
+    recommendations share the same scoring logic.
+    """
+
+    if not request or not services:
+        return []
+
+    # -----------------------------------------------------
+    # REQUEST SKILLS
+    # -----------------------------------------------------
+
+    skills = request.get(
+        "skills",
+        []
+    )
+
+    if skills is None:
+        skills = []
+
+    if isinstance(skills, str):
+        skills = [skills]
+
+    if not isinstance(skills, (list, tuple, set)):
+        skills = []
+
+    # -----------------------------------------------------
+    # REQUIRED SKILL
+    # -----------------------------------------------------
+
+    required_skill = request.get(
+        "skill_required"
+    )
+
+    if required_skill:
+        skills = list(skills) + [required_skill]
+
+    # -----------------------------------------------------
+    # REMOVE DUPLICATES
+    # -----------------------------------------------------
+
+    cleaned_skills = []
+
+    for skill in skills:
+
+        if skill is None:
+            continue
+
+        skill = str(skill).strip()
+
+        if skill and skill not in cleaned_skills:
+            cleaned_skills.append(skill)
+
+    # -----------------------------------------------------
+    # REQUEST → STUDENT-LIKE PROFILE
+    # -----------------------------------------------------
+    #
+    # The existing service recommendation engine expects
+    # a profile containing skills/interests.
+    #
+    # The request description is also kept in the profile
+    # for compatibility/future improvements.
+    # -----------------------------------------------------
+
+    request_profile = {
+        "id": None,
+        "name": "Service Request",
+        "skills": cleaned_skills,
+        "interests": [],
+        "bio": str(
+            request.get(
+                "description",
+                ""
+            ) or ""
+        ),
+    }
+
+    # -----------------------------------------------------
+    # USE EXISTING HYBRID SERVICE RECOMMENDER
+    # -----------------------------------------------------
+
+    return recommendation_engine.recommend_services(
+        student=request_profile,
+        services=services,
+        top_k=top_k
+    )
