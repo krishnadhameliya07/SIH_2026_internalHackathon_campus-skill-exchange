@@ -15,8 +15,30 @@ router = APIRouter(tags=["Profile Analysis"])
 
 
 def _extract_pdf_text(file_bytes: bytes) -> str:
-    reader = PdfReader(io.BytesIO(file_bytes))
-    return "\n".join(page.extract_text() or "" for page in reader.pages)
+    """
+    Raises ValueError with a clear, user-facing reason if the PDF genuinely
+    can't be read — never a raw library exception.
+    """
+    try:
+        reader = PdfReader(io.BytesIO(file_bytes))
+    except Exception:
+        # Some PDF writers (e.g. "print an image to PDF") produce files that
+        # strict parsing rejects but that are still readable leniently.
+        try:
+            reader = PdfReader(io.BytesIO(file_bytes), strict=False)
+        except Exception as exc:
+            raise ValueError(f"the file isn't a readable PDF ({exc})")
+
+    text = "\n".join(page.extract_text() or "" for page in reader.pages)
+
+    if len(text.strip()) < 20:
+        raise ValueError(
+            "no readable text found in the PDF — this usually means it's an image "
+            "(e.g. a screenshot saved as PDF) rather than a real text document. "
+            "Paste the resume text instead, or export a text-based PDF."
+        )
+
+    return text
 
 
 def _get_or_create_skill(db: Session, name: str, parent_skill_id: int | None) -> Skill:
@@ -47,22 +69,26 @@ async def analyze_user_profile(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
 
     final_resume_text = resume_text
+    resume_warning = None
     if resume_file is not None:
         raw = await resume_file.read()
         try:
             final_resume_text = _extract_pdf_text(raw)
-        except Exception as exc:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Could not read the uploaded PDF: {exc}",
-            )
+        except ValueError as exc:
+            # Don't block the whole analysis on a bad PDF — bio/GitHub might
+            # still be enough. If nothing else was given either, the
+            # ValueError below ("provide at least one of...") catches that.
+            resume_warning = f"Couldn't use the uploaded PDF: {exc}"
 
     github_summary = fetch_github_summary(github_username) if github_username else None
 
     try:
         analysis = analyze_profile(final_resume_text, github_summary, bio)
     except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+        detail = str(exc)
+        if resume_warning:
+            detail = f"{resume_warning} Also, {detail[0].lower()}{detail[1:]}"
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
     except Exception as exc:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"AI analysis failed: {exc}")
 
@@ -99,6 +125,7 @@ async def analyze_user_profile(
 
     return {
         "summary": analysis.summary,
+        "warning": resume_warning,
         "inferred_capability": {
             "capability": analysis.inferred_capability.capability,
             "basis": analysis.inferred_capability.basis,

@@ -309,6 +309,7 @@ export default function EditSkills() {
         {analyzeResult && (
           <div className="inferred-capability">
             <span className="inferred-tag">AI analysis complete</span>
+            {analyzeResult.warning && <p className="form-error">{analyzeResult.warning}</p>}
             <p className="inferred-capability-text">{analyzeResult.summary}</p>
             <p className="page-desc">
               <strong>Potential capability:</strong> {analyzeResult.inferred_capability.capability}
