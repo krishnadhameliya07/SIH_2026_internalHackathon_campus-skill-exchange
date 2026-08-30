@@ -11,6 +11,8 @@ export default function SignUpLogin() {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [agreed, setAgreed] = useState(false)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -108,6 +110,27 @@ export default function SignUpLogin() {
             onChange={(e) => setEmail(e.target.value)}
           />
         </label>
+
+        {mode === 'login' && (
+          <label>
+            Password
+            <div className="password-field">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword((v) => !v)}
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
+          </label>
+        )}
 
         {mode === 'signup' && (
           <label className="checkbox-row checkbox-row-terms">

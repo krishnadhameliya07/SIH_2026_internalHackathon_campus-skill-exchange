@@ -1,20 +1,19 @@
 const API_BASE = 'http://localhost:8000'
-const USER_ID_KEY = 'csx_user_id'
 
-// Whoever actually signed up/logged in on this browser — falls back to the
-// original seeded demo account (Bhavani, id 4) if nobody's signed up yet,
-// so existing flows still work out of the box.
+// In-memory only (not localStorage) — a page refresh should forget who was
+// signed in and start at signup again, not silently resume the last session.
+let currentUserId = null
+
 export function getCurrentUserId() {
-  const stored = localStorage.getItem(USER_ID_KEY)
-  return stored ? Number(stored) : 4
+  return currentUserId ?? 4
 }
 
 export function setCurrentUserId(id) {
-  localStorage.setItem(USER_ID_KEY, String(id))
+  currentUserId = id
 }
 
 export function clearCurrentUserId() {
-  localStorage.removeItem(USER_ID_KEY)
+  currentUserId = null
 }
 
 async function request(path, options) {
