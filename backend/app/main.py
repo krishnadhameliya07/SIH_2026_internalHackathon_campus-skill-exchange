@@ -9,6 +9,7 @@ from app.api.user_skills import router as user_skills_router
 from app.api.users import router as users_router
 from app.db.init_db import init_db
 from app.api.matches import router as matches_router
+from app.api.ai_matches import router as ai_matches_router
 
 
 @asynccontextmanager
@@ -35,7 +36,7 @@ app.include_router(user_skills_router)
 app.include_router(services_router)
 app.include_router(requests_router)
 app.include_router(matches_router)
-
+app.include_router(ai_matches_router)
 
 @app.get("/")
 def root():
