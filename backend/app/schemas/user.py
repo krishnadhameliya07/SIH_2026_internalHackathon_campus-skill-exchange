@@ -13,6 +13,14 @@ class UserCreate(BaseModel):
     interests: list[str] = Field(default_factory=list)
 
 
+class UserUpdate(BaseModel):
+    name: str | None = None
+    department: str | None = None
+    year: int | None = None
+    bio: str | None = None
+    availability: str | None = None
+
+
 class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

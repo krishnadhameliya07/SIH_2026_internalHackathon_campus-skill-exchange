@@ -126,6 +126,13 @@ export function lookupUserByEmail(email) {
   return request(`/users/lookup/${encodeURIComponent(email)}`)
 }
 
+export function updateUser(userId, updates) {
+  return request(`/users/${userId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(updates),
+  })
+}
+
 /** Qualitative tier from the real match score — same "no fake precision" rule as the mock version. */
 export function scoreTier(score) {
   if (score >= 75) return 'Strong Match'
