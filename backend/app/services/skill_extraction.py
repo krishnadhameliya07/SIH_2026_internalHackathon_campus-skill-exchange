@@ -1,8 +1,10 @@
 import os
+import time
 from typing import Literal
 
 import requests
 from google import genai
+from google.genai import errors as genai_errors
 from pydantic import BaseModel
 
 # Fixed vocabulary the AI must pick from — this is what actually prevents
@@ -127,12 +129,29 @@ def analyze_profile(resume_text: str | None, github_summary: str | None, bio: st
     )
 
     client = _get_client()
-    response = client.models.generate_content(
-        model="gemini-3.6-flash",
-        contents=prompt,
-        config={
-            "response_mime_type": "application/json",
-            "response_schema": ProfileAnalysis,
-        },
-    )
-    return response.parsed
+
+    # Gemini occasionally returns 503 "model is currently experiencing high
+    # demand" for a moment — that's Google's capacity, not our bug, and it's
+    # usually gone within seconds. Retry a few times before actually failing.
+    max_attempts = 3
+    last_error = None
+    for attempt in range(max_attempts):
+        try:
+            response = client.models.generate_content(
+                model="gemini-3.6-flash",
+                contents=prompt,
+                config={
+                    "response_mime_type": "application/json",
+                    "response_schema": ProfileAnalysis,
+                },
+            )
+            return response.parsed
+        except genai_errors.ServerError as exc:
+            last_error = exc
+            if attempt < max_attempts - 1:
+                time.sleep(2 * (attempt + 1))  # 2s, then 4s
+
+    raise RuntimeError(
+        "The AI model is temporarily overloaded on Google's side after "
+        f"{max_attempts} attempts. This usually clears up within a minute — try again shortly."
+    ) from last_error
