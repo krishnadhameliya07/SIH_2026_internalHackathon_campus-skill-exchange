@@ -59,7 +59,7 @@ Built incrementally, by whoever's endpoint existed at the time. As of this READM
 
 **Still frontend-only mock data (no backend exists yet for these):**
 - Team Builder, Mentorship, Wallet/Credits, Reviews, Notifications, Settings edits, and
-  authentication (login is a `localStorage` stand-in, not real auth)
+  authentication (login/session state lives in memory only — see "Known limitations" below)
 
 If you're picking up a screen to make real, check `frontend/src/api.js` first — that's where
 every real API call the frontend makes currently lives.
@@ -107,7 +107,11 @@ cd frontend && npm install && npm run dev
 
 ## Known limitations (intentional, not bugs)
 
-- No real authentication — login/signup is a local stand-in until real auth exists.
+- No real authentication — login/signup looks up a real user row by email, no password check.
+  Session state (`isAuthenticated` + the active user id) is deliberately held in memory, not
+  `localStorage`, so refreshing the page always returns to the sign-up/login screen instead of
+  silently resuming the last person's session — useful when demoing on a shared laptop, but
+  means you don't stay "logged in" across a reload.
 - AI Skill Graph categories are constrained to a fixed list (see
   `backend/app/services/skill_extraction.py`) specifically to avoid the AI inventing
   slightly-different category names on separate calls (e.g. "Programming & Software
@@ -115,3 +119,9 @@ cd frontend && npm install && npm run dev
   the schema, not by post-hoc string matching.
 - `ai/` is imported in-process by `backend/`, not run as its own service — if you move either
   folder, update the `PYTHONPATH` note above.
+- **Gemini free-tier quota is per Google account, not per API key or per project.** Generating a
+  new key (even under a new project) on the same account does *not* reset the daily
+  `generate_content_free_tier_requests` limit (20/day at time of writing) — you'll get an
+  immediate `429 RESOURCE_EXHAUSTED` on the very first call. If you hit this, the only real
+  fixes are: use a key from a genuinely different Google account, or enable billing on the
+  project. Swap the key in `backend/.env` and restart the backend to pick it up.

@@ -79,3 +79,7 @@ Opens on `http://localhost:5173`. It expects the backend at `http://localhost:80
   `init_db()` recreate tables from scratch on a throwaway dev database).
 - **CORS errors in the browser console** — confirm the frontend's origin (`http://localhost:5173`
   by default) is in the `allow_origins` list in `backend/app/main.py`.
+- **`429 RESOURCE_EXHAUSTED` from any AI feature** — Gemini's free tier caps requests per day
+  *per Google account*, not per API key or per project. A fresh key from a new project on the
+  same account won't fix it. Get a key from a different Google account (or enable billing),
+  update `GEMINI_API_KEY` in `backend/.env`, and restart the backend.
